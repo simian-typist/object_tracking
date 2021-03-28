@@ -1,6 +1,10 @@
-import argparse as ap
 import cv2
+
+import argparse as ap
 import numpy as np
+
+from time import time
+from yolov4.tf import YOLOv4
 
 
 def read_video(vidname):
@@ -9,45 +13,28 @@ def read_video(vidname):
     # initialise detector
     # TODO parameterise detector
     # Make class -> have its own config?
-    net = cv2.dnn.readNetFromDarknet("yolo/config", "yolo/yolov3.weights")
+    yolo = YOLOv4()
+
+    yolo.config.parse_names("yolo/coco.names")
+    yolo.config.parse_cfg("yolo/csp.cfg")
+
+    yolo.make_model()
+    yolo.load_weights("yolo/yolov4-csp.weights", weights_type="yolo")
+    yolo.summary(summary_type="yolo")
+    yolo.summary()
 
     cv2.namedWindow("greg")
     ok, frame = cap.read()
     while ok:
         # TODO read size from config
-        img_blb = cv2.dnn.blobFromImage(
-            frame, scalefactor=(1 / 255.0), size=(608, 608), swapRB=True, crop=False
-        )
 
-        net.setInput(img_blb)
-        ret = net.forward()
-        boxes = []
-        confidences = []
-        classIDs = []
-        for detection in ret:
-            scores = detection[5:]
-            classID = np.argmax(scores)
-            confidence = scores[classID]
-            if confidence > 0.3:
-                width = detection[2]
-                height = detection[3]
-                top_x = frame.shape[1] * (detection[0] - 0.5 * width)
-                top_y = frame.shape[0] * (detection[1] - 0.5 * height)
-                width = int(frame.shape[1] * (detection[2]))
-                height = int(frame.shape[0] * (detection[3]))
-                boxes.append([top_x, top_y, width, height])
-                confidences.append(float(confidence))
-                classIDs.append(classID)
-        indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.3, 0.4)
-        print(len(indices))
-        if len(indices) > 0:
-            for idx in indices.flatten():
-                x = int(boxes[idx][0])
-                y = int(boxes[idx][1])
-                w = boxes[idx][2]
-                h = boxes[idx][3]
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0))
+        start = time()
+        bboxes = yolo.predict(frame, 0.3)
+        print("inference took: {}".format(time() - start))
+        # TODO np.where is faster
+        bboxes = bboxes[bboxes[:, 4] == 0]  # only look at people
 
+        frame = yolo.draw_bboxes(frame, bboxes)
         cv2.imshow("greg", frame)
         ch = cv2.waitKey(1) & 0xFF
         if ch == ord("q"):

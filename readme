@@ -1,1 +1,56 @@
+# Object Tracking
 
+Goals:
+    1. Track multiple people
+
+## Variation
+
+Binary Categories:
+
+    * Online vs Batch
+    * Multi camera vs Single Camera
+    * Multi object vs Single Object
+
+## Components
+
+TIME BUDGET PER FRAME: 40ms
+
+    * Detector - Detect object(s)
+    * Predictor - Where's our next track likely to be. Kalman filter etc
+    * Data assocation algorithm - Which objects match which tracks
+    * Similarity Metrics - How we objects with old tracks
+        * Distance - How far away is our detection from our prediction
+        * Appearance similarity (histograms or person reid etc)
+        * Overlap (Intersection over Union)
+    * Storage
+    * Clean up.
+
+# TODO
+
+Things we need to do!
+
+## Next steps
+
+    * Write an actual detector class
+        * initialisation
+        * Drawing functions
+    * Write a bounding box class
+    * Introduce a tracker
+
+## Lower Priority
+    * Write our own drawing function
+    * Trim the output head of YOLO
+    * Use smaller yolo
+
+## Backburner
+    * Try different detectors
+    * Get better test material
+        * Look at actual MOT stuff
+        * Just grab videos off youtube
+
+## Done
+    * Limit detections to just people
+
+# Current Shenanigans Messing with Us
+
+No shenanigans!
